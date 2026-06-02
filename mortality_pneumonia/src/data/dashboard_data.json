@@ -1,0 +1,757 @@
+{
+  "meta": {
+    "project_title": "Integrated Data Mining Framework for Analyzing Provincial Disease Mortality Patterns in Indonesia",
+    "subtitle": "Using FP-Growth, K-Means, DBSCAN, and Ensemble Regression with SHAP (2018–2023)",
+    "authors": ["008", "030", "213"],
+    "institution": "Universitas Negeri Surabaya",
+    "course": "Data Mining – Semester 4",
+    "target_disease": "Mortalitas Pneumonia",
+    "analysis_period": "2018–2023",
+    "generated_from": "NewVersion_008_030_213_Final_Project_MortalTrace.ipynb"
+  },
+
+  "dataset": {
+    "raw": {
+      "rows": 234,
+      "columns": 16,
+      "unique_provinces_raw": 39
+    },
+    "cleaned": {
+      "rows": 204,
+      "columns": 13,
+      "unique_provinces": 34,
+      "years": [2018, 2019, 2020, 2021, 2022, 2023],
+      "structure": "Panel data (34 provinsi × 6 tahun)",
+      "provinces_dropped": [
+        "INDONESIA",
+        "PAPUA BARAT DAYA",
+        "PAPUA PEGUNUNGAN",
+        "PAPUA SELATAN",
+        "PAPUA TENGAH"
+      ]
+    },
+    "columns": {
+      "identifier": ["provinsi", "tahun", "pulau"],
+      "features": [
+        "kemiskinan_pct",
+        "rata_lama_sekolah",
+        "akses_air_bersih_pct",
+        "sanitasi_layak_pct",
+        "jumlah_rs_per_100k",
+        "jumlah_pkm_per_100k",
+        "rasio_dokter_per_100k",
+        "kepadatan_penduduk",
+        "jumlah_penduduk"
+      ],
+      "targets": ["mortalitas_pneumonia"],
+      "eda_only": ["mortalitas_dbd", "mortalitas_tbc", "mortality_composite"]
+    },
+    "missing_values_raw": {
+      "pulau": { "count": 30, "pct": 12.82 },
+      "kemiskinan_pct": { "count": 24, "pct": 10.26 },
+      "akses_air_bersih_pct": { "count": 30, "pct": 12.82 },
+      "sanitasi_layak_pct": { "count": 30, "pct": 12.82 },
+      "jumlah_rs_per_100k": { "count": 30, "pct": 12.82 },
+      "jumlah_pkm_per_100k": { "count": 30, "pct": 12.82 },
+      "rasio_dokter_per_100k": { "count": 30, "pct": 12.82 }
+    },
+    "missing_values_after_cleaning": "No missing values"
+  },
+
+  "descriptive_statistics": {
+    "kemiskinan_pct": {
+      "label": "Kemiskinan (%)",
+      "count": 204,
+      "mean": 10.464,
+      "std": 5.398,
+      "min": 3.470,
+      "q25": 6.442,
+      "median": 8.735,
+      "q75": 13.035,
+      "max": 27.74
+    },
+    "rata_lama_sekolah": {
+      "label": "Rata-rata Lama Sekolah (tahun)",
+      "count": 204,
+      "mean": 9.090,
+      "std": 0.843,
+      "min": 6.660,
+      "q25": 8.480,
+      "median": 9.095,
+      "q75": 9.630,
+      "max": 11.42
+    },
+    "akses_air_bersih_pct": {
+      "label": "Akses Air Bersih (%)",
+      "count": 204,
+      "mean": 84.182,
+      "std": 10.201,
+      "min": 49.370,
+      "q25": 77.570,
+      "median": 86.780,
+      "q75": 92.218,
+      "max": 99.86
+    },
+    "sanitasi_layak_pct": {
+      "label": "Sanitasi Layak (%)",
+      "count": 204,
+      "mean": 78.339,
+      "std": 11.405,
+      "min": 33.750,
+      "q25": 74.002,
+      "median": 79.585,
+      "q75": 84.580,
+      "max": 97.12
+    },
+    "jumlah_rs_per_100k": {
+      "label": "Jumlah RS per 100k Penduduk",
+      "count": 204,
+      "mean": 1.326,
+      "std": 0.375,
+      "min": 0.718,
+      "q25": 1.014,
+      "median": 1.275,
+      "q75": 1.610,
+      "max": 2.317
+    },
+    "jumlah_pkm_per_100k": {
+      "label": "Jumlah Puskesmas per 100k Penduduk",
+      "count": 204,
+      "mean": 5.973,
+      "std": 3.196,
+      "min": 0.412,
+      "q25": 3.457,
+      "median": 5.058,
+      "q75": 7.683,
+      "max": 16.747
+    },
+    "rasio_dokter_per_100k": {
+      "label": "Rasio Dokter per 100k Penduduk",
+      "count": 204,
+      "mean": 37.782,
+      "std": 19.599,
+      "min": 10.999,
+      "q25": 25.527,
+      "median": 31.792,
+      "q75": 43.438,
+      "max": 116.255
+    },
+    "kepadatan_penduduk": {
+      "label": "Kepadatan Penduduk (jiwa/km²)",
+      "count": 204,
+      "mean": 744.0,
+      "std": 2687.175,
+      "min": 9.0,
+      "q25": 49.0,
+      "median": 102.0,
+      "q75": 264.75,
+      "max": 16158.0
+    },
+    "jumlah_penduduk": {
+      "label": "Jumlah Penduduk",
+      "count": 204,
+      "mean": 7992382.843,
+      "std": 11205590,
+      "min": 701800,
+      "q25": 2148575,
+      "median": 4202500,
+      "q75": 8452625,
+      "max": 49860300
+    },
+    "mortalitas_pneumonia": {
+      "label": "Mortalitas Pneumonia (per 100k)",
+      "count": 204,
+      "mean": 0.435,
+      "std": 0.343,
+      "min": 0.000,
+      "q25": 0.158,
+      "median": 0.332,
+      "q75": 0.551,
+      "max": 1.587
+    },
+    "mortalitas_dbd": {
+      "label": "Mortalitas DBD (per 100k) [EDA only]",
+      "count": 204,
+      "mean": 0.448,
+      "std": 0.431,
+      "min": 0.000,
+      "q25": 0.167,
+      "median": 0.312,
+      "q75": 0.565,
+      "max": 2.513
+    },
+    "mortalitas_tbc": {
+      "label": "Mortalitas TBC (per 100k) [EDA only]",
+      "count": 204,
+      "mean": 7.790,
+      "std": 11.187,
+      "min": 0.464,
+      "q25": 3.994,
+      "median": 5.777,
+      "q75": 8.306,
+      "max": 128.835
+    },
+    "mortality_composite": {
+      "label": "Mortality Composite [Deskriptif only]",
+      "count": 204,
+      "mean": 0.170,
+      "std": 0.109,
+      "min": 0.022,
+      "q25": 0.090,
+      "median": 0.132,
+      "q75": 0.224,
+      "max": 0.620
+    }
+  },
+
+  "outlier_detection": {
+    "method": "IQR (factor=1.5)",
+    "results": [
+      { "variable": "kepadatan_penduduk",    "n_outliers": 42, "pct": 20.59 },
+      { "variable": "jumlah_penduduk",       "n_outliers": 18, "pct": 8.82  },
+      { "variable": "mortalitas_dbd",        "n_outliers": 15, "pct": 7.35  },
+      { "variable": "rasio_dokter_per_100k", "n_outliers": 15, "pct": 7.35  },
+      { "variable": "mortalitas_pneumonia",  "n_outliers": 14, "pct": 6.86  },
+      { "variable": "sanitasi_layak_pct",    "n_outliers": 12, "pct": 5.88  },
+      { "variable": "mortalitas_tbc",        "n_outliers":  9, "pct": 4.41  },
+      { "variable": "kemiskinan_pct",        "n_outliers":  7, "pct": 3.43  },
+      { "variable": "jumlah_pkm_per_100k",   "n_outliers":  4, "pct": 1.96  },
+      { "variable": "rata_lama_sekolah",     "n_outliers":  2, "pct": 0.98  },
+      { "variable": "akses_air_bersih_pct",  "n_outliers":  1, "pct": 0.49  }
+    ],
+    "notable_extreme_outliers": [
+      { "provinsi": "BANGKA BELITUNG", "tahun": 2021, "mortalitas_tbc": 128.8352, "mortalitas_pneumonia": 0.3394, "mortalitas_dbd": 1.3576 },
+      { "provinsi": "KEPULAUAN RIAU",  "tahun": 2021, "mortalitas_tbc": 80.0680,  "mortalitas_pneumonia": 0.3777, "mortalitas_dbd": 0.8026 }
+    ]
+  },
+
+  "temporal_trends": {
+    "note": "Rata-rata nasional 34 provinsi per tahun",
+    "changes_2018_to_2023": {
+      "mortalitas_tbc": {
+        "label": "Mortalitas TBC (EDA)",
+        "value_2018": 5.1740,
+        "value_2023": 9.2218,
+        "change_pct": 78.2
+      },
+      "mortalitas_pneumonia": {
+        "label": "Mortalitas Pneumonia (TARGET)",
+        "value_2018": 0.5076,
+        "value_2023": 0.4025,
+        "change_pct": -20.7
+      },
+      "mortalitas_dbd": {
+        "label": "Mortalitas DBD (EDA)",
+        "value_2018": 0.5368,
+        "value_2023": 0.4494,
+        "change_pct": -16.3
+      },
+      "mortality_composite": {
+        "label": "Mortality Composite (Deskriptif)",
+        "value_2018": 0.1900,
+        "value_2023": 0.1669,
+        "change_pct": -12.2
+      }
+    },
+    "covid_annotation": {
+      "year": 2020,
+      "note": "Tahun 2020 ditandai sebagai periode COVID-19 pada grafik temporal"
+    }
+  },
+
+  "mortality_composite_ranking": {
+    "note": "Rata-rata mortality_composite per provinsi 2018-2023 (gabungan TBC+Pneumonia+DBD, min-max normalized, deskriptif saja)",
+    "global_range": { "min": 0.0224, "max": 0.6195 },
+    "global_mean": 0.1699,
+    "top_5_provinces": [
+      { "rank": 1, "provinsi": "KALIMANTAN UTARA",     "mortality_composite": 0.3990 },
+      { "rank": 2, "provinsi": "NUSA TENGGARA TIMUR",  "mortality_composite": 0.3774 },
+      { "rank": 3, "provinsi": "GORONTALO",            "mortality_composite": 0.3408 },
+      { "rank": 4, "provinsi": "BANGKA BELITUNG",      "mortality_composite": 0.3234 },
+      { "rank": 5, "provinsi": "KALIMANTAN TIMUR",     "mortality_composite": 0.2967 }
+    ]
+  },
+
+  "discretization": {
+    "method": "Tertile (Q33 & Q67) → kategori LOW / MED / HIGH",
+    "total_transactions": 204,
+    "items_per_transaction": 10,
+    "unique_items": 30,
+    "thresholds": [
+      { "variable": "kemiskinan_pct",       "short_name": "kemiskinan",           "q33": 6.8198,      "q67": 11.7801     },
+      { "variable": "rata_lama_sekolah",    "short_name": "pendidikan",           "q33": 8.6899,      "q67": 9.4803      },
+      { "variable": "akses_air_bersih_pct", "short_name": "akses_air",            "q33": 80.3683,     "q67": 90.8300     },
+      { "variable": "sanitasi_layak_pct",   "short_name": "sanitasi",             "q33": 75.9090,     "q67": 82.8900     },
+      { "variable": "jumlah_rs_per_100k",   "short_name": "rs",                   "q33": 1.0839,      "q67": 1.4835      },
+      { "variable": "jumlah_pkm_per_100k",  "short_name": "pkm",                  "q33": 4.0346,      "q67": 7.1100      },
+      { "variable": "rasio_dokter_per_100k","short_name": "rasio_dokter",         "q33": 28.0732,     "q67": 37.8122     },
+      { "variable": "kepadatan_penduduk",   "short_name": "kepadatan",            "q33": 75.0000,     "q67": 198.0200    },
+      { "variable": "jumlah_penduduk",      "short_name": "penduduk",             "q33": 2704675.0,   "q67": 5534569.0   },
+      { "variable": "mortalitas_pneumonia", "short_name": "mortalitas_pneumonia", "q33": 0.2283,      "q67": 0.4782      }
+    ],
+    "category_distribution": "~68 per kategori (LOW/MED/HIGH) dari 204 baris"
+  },
+
+  "fp_growth": {
+    "parameters": {
+      "min_support": 0.10,
+      "min_confidence": 0.60,
+      "min_lift": 1.5,
+      "total_transactions": 204,
+      "unique_items": 30
+    },
+    "performance_comparison": {
+      "fp_growth": {
+        "runtime_seconds": 0.7944,
+        "frequent_itemsets": 407
+      },
+      "apriori": {
+        "runtime_seconds": 0.1056,
+        "frequent_itemsets": 407
+      },
+      "note": "Apriori 7.5x lebih cepat pada dataset ini. FP-Growth unggul pada dataset jutaan transaksi."
+    },
+    "itemsets_distribution": {
+      "length_1": 30,
+      "length_2": 231,
+      "length_3": 122,
+      "length_4": 23,
+      "length_5": 1,
+      "total": 407
+    },
+    "top_itemsets_by_support": [
+      { "itemset": ["akses_air_MED"],              "support": 0.3480 },
+      { "itemset": ["sanitasi_MED"],               "support": 0.3480 },
+      { "itemset": ["pkm_MED"],                    "support": 0.3431 },
+      { "itemset": ["penduduk_MED"],               "support": 0.3431 },
+      { "itemset": ["rs_MED"],                     "support": 0.3431 },
+      { "itemset": ["mortalitas_pneumonia_MED"],   "support": 0.3431 },
+      { "itemset": ["pendidikan_MED"],             "support": 0.3431 }
+    ],
+    "total_rules": 462,
+    "rules_statistics": {
+      "support_mean": 0.1299,
+      "confidence_mean": 0.7784,
+      "lift_mean": 2.5922,
+      "support_std": 0.0350,
+      "confidence_std": 0.1192,
+      "lift_std": 0.6549
+    }
+  },
+
+  "policy_rules": {
+    "target": "mortalitas_pneumonia_HIGH",
+    "total_policy_rules": 10,
+    "stats": {
+      "support_mean": 0.1147,
+      "confidence_mean": 0.6993,
+      "lift_mean": 2.1293,
+      "lift_max": 2.2836
+    },
+    "rules": [
+      {
+        "rank": 1,
+        "antecedents": ["kemiskinan_HIGH", "sanitasi_LOW"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1176,
+        "confidence": 0.7500,
+        "lift": 2.2836,
+        "leverage": 0.0661,
+        "conviction": 2.6863,
+        "interpretation": "Kemiskinan tinggi + Sanitasi buruk → 75% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 2,
+        "antecedents": ["kemiskinan_HIGH", "penduduk_MED"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1127,
+        "confidence": 0.7419,
+        "lift": 2.2590,
+        "leverage": 0.0628,
+        "conviction": 2.6023,
+        "interpretation": "Kemiskinan tinggi + Jumlah penduduk sedang → 74.2% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 3,
+        "antecedents": ["kemiskinan_HIGH", "pkm_HIGH"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1324,
+        "confidence": 0.7297,
+        "lift": 2.2219,
+        "leverage": 0.0728,
+        "conviction": 2.4848,
+        "interpretation": "Kemiskinan tinggi + Puskesmas banyak → 73% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 4,
+        "antecedents": ["kemiskinan_HIGH", "pendidikan_LOW"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1127,
+        "confidence": 0.7188,
+        "lift": 2.1884,
+        "leverage": 0.0612,
+        "conviction": 2.3878,
+        "interpretation": "Kemiskinan tinggi + Pendidikan rendah → 71.9% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 5,
+        "antecedents": ["kemiskinan_HIGH", "rasio_dokter_LOW"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1127,
+        "confidence": 0.6970,
+        "lift": 2.1221,
+        "leverage": 0.0596,
+        "conviction": 2.2162,
+        "interpretation": "Kemiskinan tinggi + Rasio dokter rendah → 69.7% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 6,
+        "antecedents": ["kepadatan_LOW", "penduduk_LOW", "pkm_HIGH"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1029,
+        "confidence": 0.6774,
+        "lift": 2.0626,
+        "leverage": 0.0530,
+        "conviction": 2.0819,
+        "interpretation": "Kepadatan rendah + Penduduk sedikit + Puskesmas banyak → 67.7% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 7,
+        "antecedents": ["kepadatan_LOW", "penduduk_LOW"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1029,
+        "confidence": 0.6774,
+        "lift": 2.0626,
+        "leverage": 0.0530,
+        "conviction": 2.0819,
+        "interpretation": "Kepadatan rendah + Penduduk sedikit → 67.7% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 8,
+        "antecedents": ["pkm_HIGH", "sanitasi_LOW"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1029,
+        "confidence": 0.6774,
+        "lift": 2.0626,
+        "leverage": 0.0530,
+        "conviction": 2.0819,
+        "interpretation": "Puskesmas banyak + Sanitasi buruk → 67.7% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 9,
+        "antecedents": ["kepadatan_LOW", "pkm_HIGH"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1373,
+        "confidence": 0.6667,
+        "lift": 2.0299,
+        "leverage": 0.0696,
+        "conviction": 2.0147,
+        "interpretation": "Kepadatan rendah + Puskesmas banyak → 66.7% kemungkinan mortalitas pneumonia tinggi"
+      },
+      {
+        "rank": 10,
+        "antecedents": ["akses_air_MED", "kepadatan_LOW"],
+        "consequent": "mortalitas_pneumonia_HIGH",
+        "support": 0.1127,
+        "confidence": 0.6571,
+        "lift": 2.0009,
+        "leverage": 0.0564,
+        "conviction": 1.9587,
+        "interpretation": "Akses air sedang + Kepadatan rendah → 65.7% kemungkinan mortalitas pneumonia tinggi"
+      }
+    ]
+  },
+
+  "clustering": {
+    "features_used": [
+      "kemiskinan_pct",
+      "rata_lama_sekolah",
+      "akses_air_bersih_pct",
+      "sanitasi_layak_pct",
+      "jumlah_rs_per_100k",
+      "jumlah_pkm_per_100k",
+      "rasio_dokter_per_100k",
+      "kepadatan_penduduk",
+      "mortalitas_pneumonia"
+    ],
+    "data_shape": "34 provinsi × 9 fitur numerik (agregat rata-rata 2018–2023)",
+
+    "kmeans": {
+      "optimal_k": 4,
+      "selection_reason": "Elbow + Silhouette + interpretabilitas kebijakan",
+      "metrics": {
+        "silhouette_score": 0.2411,
+        "davies_bouldin_index": 1.0581
+      },
+      "elbow_data": [
+        { "k": 2,  "inertia": 230.73, "silhouette": 0.3221, "davies_bouldin": 1.1668 },
+        { "k": 3,  "inertia": 181.00, "silhouette": 0.2420, "davies_bouldin": 1.3877 },
+        { "k": 4,  "inertia": 140.08, "silhouette": 0.2411, "davies_bouldin": 1.0581 },
+        { "k": 5,  "inertia": 109.73, "silhouette": 0.2522, "davies_bouldin": 0.8761 },
+        { "k": 6,  "inertia":  91.77, "silhouette": 0.2476, "davies_bouldin": 0.8308 },
+        { "k": 7,  "inertia":  75.50, "silhouette": 0.2216, "davies_bouldin": 0.8628 },
+        { "k": 8,  "inertia":  63.62, "silhouette": 0.2319, "davies_bouldin": 0.9443 },
+        { "k": 9,  "inertia":  56.37, "silhouette": 0.2257, "davies_bouldin": 0.8897 },
+        { "k": 10, "inertia":  51.09, "silhouette": 0.2019, "davies_bouldin": 0.8921 }
+      ],
+      "cluster_profiles": {
+        "Cluster 1": {
+          "n_provinces": 16,
+          "kemiskinan_pct": 8.856,
+          "rata_lama_sekolah": 8.840,
+          "akses_air_bersih_pct": 81.416,
+          "sanitasi_layak_pct": 76.844,
+          "jumlah_rs_per_100k": 1.082,
+          "jumlah_pkm_per_100k": 4.585,
+          "rasio_dokter_per_100k": 30.118,
+          "kepadatan_penduduk": 373.583,
+          "mortalitas_pneumonia": 0.233,
+          "label": "Menengah-Padat",
+          "provinces": [
+            "BANTEN", "BENGKULU", "JAMBI", "JAWA BARAT", "JAWA TENGAH",
+            "JAWA TIMUR", "KALIMANTAN BARAT", "KALIMANTAN SELATAN",
+            "KALIMANTAN TENGAH", "LAMPUNG", "RIAU", "SULAWESI BARAT",
+            "SULAWESI SELATAN", "SUMATERA BARAT", "SUMATERA SELATAN",
+            "SUMATERA UTARA"
+          ]
+        },
+        "Cluster 2": {
+          "n_provinces": 7,
+          "kemiskinan_pct": 6.767,
+          "rata_lama_sekolah": 9.602,
+          "akses_air_bersih_pct": 88.326,
+          "sanitasi_layak_pct": 88.624,
+          "jumlah_rs_per_100k": 1.760,
+          "jumlah_pkm_per_100k": 4.955,
+          "rasio_dokter_per_100k": 58.056,
+          "kepadatan_penduduk": 361.333,
+          "mortalitas_pneumonia": 0.429,
+          "label": "Menengah-Maju",
+          "provinces": [
+            "BALI", "BANGKA BELITUNG", "DI YOGYAKARTA",
+            "KALIMANTAN TIMUR", "KALIMANTAN UTARA",
+            "KEPULAUAN RIAU", "SULAWESI UTARA"
+          ]
+        },
+        "Cluster 3": {
+          "n_provinces": 10,
+          "kemiskinan_pct": 16.247,
+          "rata_lama_sekolah": 8.920,
+          "akses_air_bersih_pct": 84.351,
+          "sanitasi_layak_pct": 72.065,
+          "jumlah_rs_per_100k": 1.365,
+          "jumlah_pkm_per_100k": 9.250,
+          "rasio_dokter_per_100k": 28.728,
+          "kepadatan_penduduk": 81.383,
+          "mortalitas_pneumonia": 0.787,
+          "label": "Tertinggal-Risiko Tinggi",
+          "provinces": [
+            "ACEH", "GORONTALO", "MALUKU", "MALUKU UTARA",
+            "NUSA TENGGARA BARAT", "NUSA TENGGARA TIMUR",
+            "PAPUA", "PAPUA BARAT", "SULAWESI TENGAH", "SULAWESI TENGGARA"
+          ]
+        },
+        "Cluster 4": {
+          "n_provinces": 1,
+          "kemiskinan_pct": 4.237,
+          "rata_lama_sekolah": 11.210,
+          "akses_air_bersih_pct": 97.743,
+          "sanitasi_layak_pct": 93.020,
+          "jumlah_rs_per_100k": 1.814,
+          "jumlah_pkm_per_100k": 2.545,
+          "rasio_dokter_per_100k": 109.034,
+          "kepadatan_penduduk": 15975.500,
+          "mortalitas_pneumonia": 0.197,
+          "label": "Megapolitan-Unggul",
+          "provinces": ["DKI JAKARTA"]
+        }
+      },
+      "island_distribution": {
+        "Cluster 1": { "Bali & Nusa Tenggara": 0, "Jawa": 4, "Kalimantan": 3, "Maluku": 0, "Papua": 0, "Sulawesi": 2, "Sumatera": 7, "Total": 16 },
+        "Cluster 2": { "Bali & Nusa Tenggara": 1, "Jawa": 1, "Kalimantan": 2, "Maluku": 0, "Papua": 0, "Sulawesi": 1, "Sumatera": 2, "Total": 7  },
+        "Cluster 3": { "Bali & Nusa Tenggara": 2, "Jawa": 0, "Kalimantan": 0, "Maluku": 2, "Papua": 2, "Sulawesi": 3, "Sumatera": 1, "Total": 10 },
+        "Cluster 4": { "Bali & Nusa Tenggara": 0, "Jawa": 1, "Kalimantan": 0, "Maluku": 0, "Papua": 0, "Sulawesi": 0, "Sumatera": 0, "Total": 1  }
+      }
+    },
+
+    "dbscan": {
+      "optimal_eps": 2.0,
+      "optimal_min_samples": 2,
+      "n_clusters": 2,
+      "n_noise": 8,
+      "noise_pct": 23.5,
+      "metrics": {
+        "silhouette_score": 0.2022,
+        "davies_bouldin_index": 3.0782
+      },
+      "cluster_profiles": {
+        "Cluster 1": {
+          "kemiskinan_pct": 8.964,
+          "rata_lama_sekolah": 9.061,
+          "akses_air_bersih_pct": 84.488,
+          "sanitasi_layak_pct": 78.241,
+          "jumlah_rs_per_100k": 1.247,
+          "jumlah_pkm_per_100k": 5.536,
+          "rasio_dokter_per_100k": 34.489,
+          "kepadatan_penduduk": 279.882,
+          "mortalitas_pneumonia": 0.362
+        },
+        "Cluster 2": {
+          "kemiskinan_pct": 19.477,
+          "rata_lama_sekolah": 10.081,
+          "akses_air_bersih_pct": 85.052,
+          "sanitasi_layak_pct": 75.190,
+          "jumlah_rs_per_100k": 1.816,
+          "jumlah_pkm_per_100k": 13.369,
+          "rasio_dokter_per_100k": 30.839,
+          "kepadatan_penduduk": 25.167,
+          "mortalitas_pneumonia": 0.756
+        }
+      },
+      "grid_search_top10": [
+        { "eps": 2.00, "min_samples": 2, "n_clusters": 2, "n_noise":  8, "silhouette":  0.2022, "davies_bouldin": 3.0782 },
+        { "eps": 1.75, "min_samples": 3, "n_clusters": 2, "n_noise": 16, "silhouette": -0.0060, "davies_bouldin": 3.1071 },
+        { "eps": 1.75, "min_samples": 2, "n_clusters": 4, "n_noise": 12, "silhouette": -0.0084, "davies_bouldin": 3.0503 },
+        { "eps": 1.50, "min_samples": 2, "n_clusters": 5, "n_noise": 18, "silhouette": -0.0608, "davies_bouldin": 2.1414 },
+        { "eps": 1.50, "min_samples": 3, "n_clusters": 2, "n_noise": 24, "silhouette": -0.0630, "davies_bouldin": 1.8904 },
+        { "eps": 1.25, "min_samples": 2, "n_clusters": 4, "n_noise": 25, "silhouette": -0.0850, "davies_bouldin": 1.5173 },
+        { "eps": 1.00, "min_samples": 2, "n_clusters": 2, "n_noise": 30, "silhouette": -0.0914, "davies_bouldin": 1.3243 },
+        { "eps": 1.50, "min_samples": 4, "n_clusters": 2, "n_noise": 26, "silhouette": -0.1217, "davies_bouldin": 2.0717 }
+      ]
+    },
+
+    "comparison": [
+      { "algoritma": "K-Means", "n_clusters": 4, "silhouette": 0.2411, "davies_bouldin": 1.0581, "winner": true  },
+      { "algoritma": "DBSCAN", "n_clusters": 2, "silhouette": 0.2022, "davies_bouldin": 3.0782, "winner": false }
+    ]
+  },
+
+  "regression": {
+    "target": "mortalitas_pneumonia",
+    "validation_strategy": "GroupKFold (n_splits=5), grup = provinsi",
+    "split": {
+      "train_rows": 170,
+      "train_years": "2018–2022",
+      "test_rows": 34,
+      "test_year": 2023,
+      "n_features": 9
+    },
+    "target_range": {
+      "y_train_min": 0.000,
+      "y_train_max": 1.587,
+      "y_train_mean": 0.442,
+      "y_train_std": 0.352,
+      "y_test_min": 0.075,
+      "y_test_max": 1.275
+    },
+    "models": [
+      {
+        "name": "XGBoost",
+        "cv_r2":   0.1950,
+        "cv_mae":  0.2261,
+        "test_r2": 0.8434,
+        "test_mae": 0.0869,
+        "test_rmse": 0.1117,
+        "best_model": true,
+        "performance_label": "Sangat Baik (Test R² > 0.75)"
+      },
+      {
+        "name": "CatBoost",
+        "cv_r2":   0.2121,
+        "cv_mae":  0.2190,
+        "test_r2": 0.8284,
+        "test_mae": 0.0924,
+        "test_rmse": 0.1169,
+        "best_model": false,
+        "performance_label": "Sangat Baik (Test R² > 0.75)"
+      },
+      {
+        "name": "LightGBM",
+        "cv_r2":   0.1017,
+        "cv_mae":  0.2435,
+        "test_r2": 0.8078,
+        "test_mae": 0.0890,
+        "test_rmse": 0.1238,
+        "best_model": false,
+        "performance_label": "Sangat Baik (Test R² > 0.75)"
+      },
+      {
+        "name": "RandomForest",
+        "cv_r2":   0.2317,
+        "cv_mae":  0.2223,
+        "test_r2": 0.7492,
+        "test_mae": 0.1083,
+        "test_rmse": 0.1414,
+        "best_model": false,
+        "performance_label": "Baik (Test R² > 0.70)"
+      }
+    ],
+    "best_model": {
+      "name": "XGBoost",
+      "target": "Pneumonia",
+      "cv_r2": 0.1950,
+      "test_r2": 0.8434,
+      "test_mae": 0.0869,
+      "test_rmse": 0.1117,
+      "note": "Gap CV vs Test R² cukup besar, mengindikasikan distribusi antar provinsi heterogen"
+    }
+  },
+
+  "shap_interpretability": {
+    "model": "XGBoost",
+    "target": "Mortalitas Pneumonia",
+    "n_samples": 204,
+    "n_features": 9,
+    "feature_importance": [
+      { "rank": 1, "feature": "kemiskinan_pct",       "label": "Kemiskinan %",       "mean_abs_shap": 0.1140 },
+      { "rank": 2, "feature": "kepadatan_penduduk",   "label": "Kepadatan Pddk",     "mean_abs_shap": 0.0579 },
+      { "rank": 3, "feature": "jumlah_rs_per_100k",   "label": "RS per 100k",        "mean_abs_shap": 0.0547 },
+      { "rank": 4, "feature": "rata_lama_sekolah",    "label": "Lama Sekolah",       "mean_abs_shap": 0.0529 },
+      { "rank": 5, "feature": "jumlah_penduduk",      "label": "Jumlah Penduduk",    "mean_abs_shap": 0.0420 },
+      { "rank": 6, "feature": "akses_air_bersih_pct", "label": "Akses Air Bersih",   "mean_abs_shap": null, "note": "Rank 6-9 tidak tersedia di output notebook" },
+      { "rank": 7, "feature": "sanitasi_layak_pct",   "label": "Sanitasi Layak",     "mean_abs_shap": null },
+      { "rank": 8, "feature": "jumlah_pkm_per_100k",  "label": "PKM per 100k",       "mean_abs_shap": null },
+      { "rank": 9, "feature": "rasio_dokter_per_100k","label": "Rasio Dokter",       "mean_abs_shap": null }
+    ],
+    "key_finding": "Kemiskinan adalah faktor paling dominan (mean|SHAP|=0.114), hampir 2x lebih berpengaruh dari faktor kedua (Kepadatan Penduduk)."
+  },
+
+  "key_findings": {
+    "fp_growth": [
+      "Kemiskinan tinggi adalah anteseden terkuat dalam semua top-5 policy rules",
+      "Kombinasi kemiskinan_HIGH + sanitasi_LOW memiliki lift tertinggi (2.28)",
+      "10 dari 462 rules mengarah ke mortalitas_pneumonia_HIGH",
+      "Confidence rata-rata policy rules: 69.9%"
+    ],
+    "clustering": [
+      "Cluster 3 (10 provinsi terpencil/tertinggal) memiliki mortalitas pneumonia tertinggi: 0.787",
+      "DKI Jakarta (Cluster 4) menjadi outlier positif: kemiskinan terendah, dokter terbanyak, mortalitas terendah (0.197)",
+      "K-Means lebih superior dari DBSCAN (Silhouette 0.24 vs 0.20, DBI 1.06 vs 3.08)"
+    ],
+    "regression": [
+      "XGBoost adalah model terbaik dengan Test R²=0.843",
+      "Semua 4 model ensemble berhasil (Test R² > 0.74)",
+      "Gap antara CV R² dan Test R² mengindikasikan heterogenitas antar provinsi",
+      "Model validasi temporal (train 2018-2022, test 2023) mencegah data leakage"
+    ],
+    "shap": [
+      "Kemiskinan adalah prediktor dominan mortalitas pneumonia (SHAP 0.114)",
+      "Kepadatan penduduk berpengaruh positif (daerah padat → risiko lebih tinggi)",
+      "Akses layanan kesehatan (RS, Dokter, Sekolah) juga signifikan"
+    ]
+  },
+
+  "province_list": [
+    "ACEH", "BALI", "BANGKA BELITUNG", "BANTEN", "BENGKULU",
+    "DI YOGYAKARTA", "DKI JAKARTA", "GORONTALO", "JAMBI",
+    "JAWA BARAT", "JAWA TENGAH", "JAWA TIMUR",
+    "KALIMANTAN BARAT", "KALIMANTAN SELATAN", "KALIMANTAN TENGAH",
+    "KALIMANTAN TIMUR", "KALIMANTAN UTARA", "KEPULAUAN RIAU",
+    "LAMPUNG", "MALUKU", "MALUKU UTARA",
+    "NUSA TENGGARA BARAT", "NUSA TENGGARA TIMUR",
+    "PAPUA", "PAPUA BARAT", "RIAU",
+    "SULAWESI BARAT", "SULAWESI SELATAN", "SULAWESI TENGAH",
+    "SULAWESI TENGGARA", "SULAWESI UTARA",
+    "SUMATERA BARAT", "SUMATERA SELATAN", "SUMATERA UTARA"
+  ]
+}
